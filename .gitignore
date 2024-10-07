@@ -1,6 +1,6 @@
 node_modules/
-data/2024/*
-data/2025/*
-sheets/join/*
-sheets/*
+data/2024/
+data/2025/
+sheets/join/
+sheets/
 package-lock.json
