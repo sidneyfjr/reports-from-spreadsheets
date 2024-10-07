@@ -3,4 +3,6 @@ src/data/2024/*
 src/data/2025/*
 src/sheets/join/*
 src/sheets/*
+!src/data/
+!src/sheets/
 package-lock.json
