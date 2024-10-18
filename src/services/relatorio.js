@@ -1,8 +1,10 @@
-const {FILES_PATH}    = require('../utils/constants');
+const {FILES_PATH, MESSAGES}   = require('../utils/constants');
 const Relatorio     = require('../models/relatorio');
-const { writeJSON } = require('../utils/fileUtils');
-const {relatoriosData, gruposData, publicadoresData} = require('../utils/loadFilesData');
+const { writeJSON, readJSON } = require('../utils/fileUtils');
+const {gruposData, publicadoresData} = require('../utils/loadFilesData');
 const booleanToYesNo = require('../utils/booleanToYesNo');
+
+let relatoriosData = readJSON(FILES_PATH.RELATORIOS);
 
 class RelatorioService {
 
@@ -19,24 +21,33 @@ class RelatorioService {
     }
 
     static findRelatorioByPublicador(publicadorId) {
-      return RelatorioService.getAllRelatorios()
-              .filter(relatorio => relatorio.publicadorId === publicadorId);
+      const relatorios =  RelatorioService.getAllRelatorios()
+                          .filter(r => r.publicadorId === publicadorId);
+      return relatorios.length !== 0
+              ? relatorios
+              : {message: MESSAGES.RELATORIO_NOT_FOUND};
     }
 
     static findRelatorioByPublicadorAndMes(publicadorId, mes) {
-      return RelatorioService
-              .findRelatorioByPublicador(publicadorId)
-              .find(relatorio => relatorio.mes === mes.toUpperCase());
+      const relatorios =  RelatorioService.findRelatorioByPublicador(publicadorId);                          
+      return relatorios.message !== MESSAGES.RELATORIO_NOT_FOUND
+              ? relatorios.find(r => r.mes === mes.toUpperCase()) 
+              : {message: MESSAGES.RELATORIO_NOT_FOUND};
     }
 
     static findRelatorioByGrupo(grupo) {
-      return RelatorioService.getAllRelatorios()
-              .filter(relatorio => relatorio.grupo === grupo.toUpperCase());
+      const relatorios = RelatorioService.getAllRelatorios()
+              .filter(r => r.grupo === grupo.toUpperCase());
+      return relatorios.length !== 0
+              ? relatorios
+              : {message: MESSAGES.RELATORIO_NOT_FOUND};
     }
 
   static findRelatorioByGrupoAndMes(grupo, mes) {
-    return RelatorioService.findRelatorioByGrupo(grupo)
-            .filter(relatorio => relatorio.mes === mes.toUpperCase());
+    const relatorios = RelatorioService.findRelatorioByGrupo(grupo);
+    return relatorios.message !== MESSAGES.RELATORIO_NOT_FOUND
+            ? relatorios.filter(r => r.mes === mes.toUpperCase())
+            : {message: MESSAGES.RELATORIO_NOT_FOUND};
   }
 
 
@@ -62,58 +73,51 @@ class RelatorioService {
     ));
   }
 
-  static findPioneirosRegulares() {
-    const relatoriosPioneiros = RelatorioService.getAllRelatorios().filter(r => r.pioneiroRegular === 'SIM');
-    return RelatorioService.relatorioToPublicador(relatoriosPioneiros);
-  }
-
-static findPioneirosRegularesGrupo(grupo) {
-  const pioneirosGrupo = RelatorioService.findPioneirosRegulares();
-  return pioneirosGrupo.filter(relatorio => relatorio.grupo === grupo.toUpperCase());
-}
-
-static findPioneirosAuxiliaresMes(mes) {
-  const relatoriosPioneirosAuxiliares = RelatorioService.getAllRelatorios().filter(r => r.pioneiroAuxiliar === 'SIM' && r.mes === mes.toUpperCase());
-  return RelatorioService.relatorioToPublicador(relatoriosPioneirosAuxiliares);
-
-}
-static findPioneirosAuxiliaresMesGrupo(mes, grupo) {
-  const relatoriosPioneirosAuxiliares = RelatorioService.getAllRelatorios()
-                                          .filter(r => r.pioneiroAuxiliar === 'SIM' 
-                                            && r.mes === mes.toUpperCase() 
-                                            && r.grupo === grupo.toUpperCase()
-                                          );
-
-  return RelatorioService.relatorioToPublicador(relatoriosPioneirosAuxiliares);
-}
 
 static findRelatoriosPioneirosRegularesMes(mes) {
-  return RelatorioService.getAllRelatorios().filter(r => r.pioneiroRegular === 'SIM' && r.mes === mes.toUpperCase());
+  const relatorio =  RelatorioService.getAllRelatorios()
+                      .filter(r => r.pioneiroRegular === 'SIM' && r.mes === mes.toUpperCase());
+  return relatorio.length !==0 
+          ? relatorio
+          : {message: MESSAGES.RELATORIO_NOT_FOUND};
 }
 
 static findRelatoriosPioneirosRegularesMesGrupo(mes, grupo) {
-  return RelatorioService.getAllRelatorios()
-          .filter(r => r.pioneiroRegular === 'SIM' && r.mes === mes.toUpperCase() && r.grupo === grupo.toUpperCase());
+  const relatorios = RelatorioService.findRelatoriosPioneirosRegularesMes(mes);
+  return  relatorios.message !== MESSAGES.RELATORIO_NOT_FOUND 
+          ? relatorios.filter(r => r.grupo === grupo.toUpperCase())
+          : {message: MESSAGES.RELATORIO_NOT_FOUND};
 }
 
 static findRelatoriosPioneirosAuxiliaresMes(mes) {
-  return RelatorioService.getAllRelatorios()
-    .filter(r => r.pioneiroAuxiliar === 'SIM' && r.mes === mes.toUpperCase());
+  const relatorios =  RelatorioService.getAllRelatorios()
+                        .filter(r => r.pioneiroAuxiliar === 'SIM' && r.mes === mes.toUpperCase());
+  return relatorios.length !== 0
+          ? relatorios
+          : {message: MESSAGES.RELATORIO_NOT_FOUND}
 }
 
 static findRelatoriosPioneirosAuxiliaresMesGrupo(mes, grupo) {
-  return RelatorioService.getAllRelatorios()
-    .filter(r => r.pioneiroAuxiliar === 'SIM' && r.mes === mes.toUpperCase() && r.grupo === grupo.toUpperCase());
+  const relatorios = RelatorioService.findRelatoriosPioneirosAuxiliaresMes(mes)
+  return relatorios.message !== MESSAGES.RELATORIO_NOT_FOUND
+          ? relatorios.filter(r => r.grupo === grupo.toUpperCase())
+          : {message: MESSAGES.RELATORIO_NOT_FOUND};
 }
 
 static findRelatoriosPublicadorNaoRelatouMes(mes) {
-  return RelatorioService.getAllRelatorios()
-    .filter(r => r.participou === 'NÃO' && r.mes === mes.toUpperCase());
+  const relatorios = RelatorioService.getAllRelatorios()
+                      .filter(r => r.participou === 'NÃO' && r.mes === mes.toUpperCase());
+  return relatorios.length !== 0
+          ? relatorios
+          : {message: MESSAGES.RELATORIO_NOT_FOUND};
 }
 
 static findRelatoriosPublicadorNaoRelatouMesGrupo(mes,grupo) {
-  return RelatorioService.getAllRelatorios()
-    .filter(r => r.participou === 'NÃO' && r.mes === mes.toUpperCase() && r.grupo === grupo.toUpperCase());
+  const relatorios =  RelatorioService.getAllRelatorios()
+                        .filter(r => r.participou === 'NÃO' && r.mes === mes.toUpperCase() && r.grupo === grupo.toUpperCase());
+  return relatorios.length !== 0
+  ? relatorios
+  : {message: MESSAGES.RELATORIO_NOT_FOUND};
 }
 
  // Criar Pioneiros com horas atrasadas
@@ -127,14 +131,14 @@ static findRelatoriosPublicadorNaoRelatouMesGrupo(mes,grupo) {
     }
 
     static removeRelatorio(publicadorId, mes, anoServico) {
-        const relatorioData = relatoriosData.filter(rel => !(rel.publicadorId === publicadorId && rel.mes === mes && rel.anoServico === anoServico));
-        writeJSON(FILES_PATH.RELATORIOS, relatorioData);
+        relatoriosData = relatoriosData.filter(rel => !(rel.publicadorId === publicadorId && rel.mes === mes && rel.anoServico === anoServico));
+        writeJSON(FILES_PATH.RELATORIOS, relatoriosData);
     }
 
     static updateRelatorio(publicadorId, mes, anoServico, dadosAtualizados) {  
         const index = relatoriosData.findIndex(rel => (rel.publicadorId === publicadorId && rel.mes === mes && rel.anoServico === anoServico));    
         if (index === -1) {
-          throw new Error('Relatório não encontrado');
+          throw new Error({message: MESSAGES.RELATORIO_NOT_FOUND});
         }    
         relatoriosData[index] = {
           ...relatoriosData[index],    // Mantém as propriedades antigas

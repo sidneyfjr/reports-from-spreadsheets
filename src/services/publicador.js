@@ -1,7 +1,10 @@
-const FILES_PATH     = require('../utils/constants');
+const {FILES_PATH}     = require('../utils/constants');
 const Publicador     = require('../models/publicador');
-const { writeJSON }  = require('../utils/fileUtils');
-const { gruposData, publicadoresData} = require('../utils/loadFilesData');
+const { writeJSON, readJSON }  = require('../utils/fileUtils');
+const { gruposData} = require('../utils/loadFilesData');
+const {MESSAGES} = require('../utils/constants');
+
+let publicadoresData = readJSON(FILES_PATH.PUBLICADORES);
 
 class PublicadorService {
 
@@ -16,12 +19,21 @@ class PublicadorService {
         });
     }
 
-    static findPublicadorById(publicadorId) {    
-      return PublicadorService.getAllPublicadores().filter(r => r.publicadorId === publicadorId);
+    static getPublicadorById(publicadorId) {  
+        const publicador  = PublicadorService.getAllPublicadores()
+                              .find(r => r.publicadorId === publicadorId);
+        return publicador 
+                ? publicador 
+                : {message: MESSAGES.PUBLICADOR_NOT_FOUND};
   }
 
-    static findPublicadorByGrupo(grupo) {  
-      return PublicadorService.getAllPublicadores().filter(r => r.grupo === grupo.toUpperCase());
+  static getPublicadorByGrupo(grupo) {
+    const publicadores  =  PublicadorService.getAllPublicadores()
+                            .filter(r => r.grupo === grupo.toUpperCase());
+
+    return publicadores.length !== 0
+            ? publicadores
+            : {message: MESSAGES.PUBLICADOR_NOT_FOUND};
   }
 
   // Criar publicadores sem contato de emergência
@@ -37,8 +49,8 @@ class PublicadorService {
     }
 
     static removePublicador(publicadorId) {
-        const publicadorData = publicadoresData.filter(publicador => publicador.publicadorId !== publicadorId);
-        writeJSON(FILES_PATH.PUBLICADORES, publicadorData);
+      publicadoresData = publicadoresData.filter(publicador => publicador.publicadorId !== publicadorId);
+      writeJSON(FILES_PATH.PUBLICADORES, publicadoresData);
     }
 
     static updatePublicador(publicadorId, dadosAtualizados) {

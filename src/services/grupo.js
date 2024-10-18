@@ -1,8 +1,10 @@
-const FILES_PATH    = require('../utils/constants');
+const {FILES_PATH}    = require('../utils/constants');
 const Grupo         = require('../models/grupo');
-const { writeJSON } = require('../utils/fileUtils');
-const { gruposData, publicadoresData} = require('../utils/loadFilesData');
+const { writeJSON, readJSON } = require('../utils/fileUtils');
+const { publicadoresData} = require('../utils/loadFilesData');
+const {MESSAGES} = require('../utils/constants');
 
+let gruposData = readJSON(FILES_PATH.GRUPOS);
 
 class GrupoService {
 
@@ -19,15 +21,17 @@ class GrupoService {
         });
     }
     
-    static findGrupoById(grupoId) {
-        const grupo = gruposData.find(grupo => grupo.grupoId === grupoId);
-        if (!grupo) {
-          console.warn(`Erro ao validar grupo existente!`);
-          return grupo;
-        }
+    static getGrupoById(grupoId) {
+      try {
+        const grupo     = gruposData.find(grupo => grupo.grupoId === grupoId);
         const dirigente = publicadoresData.find(p => p.publicadorId === grupo.dirigenteId);
         const ajudante  = publicadoresData.find(p => p.publicadorId === grupo.ajudanteId); 
-        return grupo ? Grupo.fromJSON(grupo, dirigente, ajudante) : null;
+        return grupo 
+              ? Grupo.fromJSON(grupo, dirigente, ajudante) 
+              : {message: MESSAGES.GROUP_NOT_FOUND};
+      } catch (error) {
+        return {message: MESSAGES.GROUP_NOT_FOUND};
+      }
     }
 
 
@@ -37,8 +41,8 @@ class GrupoService {
     }
 
     static removeGrupo(grupoId) {
-        const grupoData = gruposData.filter(grupo => grupo.grupoId !== grupoId);
-        writeJSON(FILES_PATH.GRUPOS, grupoData);
+      gruposData = gruposData.filter(grupo => grupo.grupoId !== grupoId);
+      writeJSON(FILES_PATH.GRUPOS, gruposData);
     }
 
     static updateGrupo(grupoId, dadosAtualizados) {
